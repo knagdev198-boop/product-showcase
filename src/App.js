@@ -14,9 +14,9 @@ export default function App() {
   const [pname, setPname] = useState("");
   const [price, setPrice] = useState("");
   const [discount, setDiscount] = useState("");
-  const [image, setImage] = useState(null);
+  const [image, setImage] = useState(""); // Will store base64 string
 
-  // Load products and admin role from memory on mount
+  // Load products and admin role from localStorage on mount
   useEffect(() => {
     const savedProducts = JSON.parse(localStorage.getItem("products") || "[]");
     const savedRole = localStorage.getItem("adminRole");
@@ -54,7 +54,7 @@ export default function App() {
       name: pname,
       price,
       discount,
-      image,
+      image, // base64 string (persists in localStorage)
     };
 
     const updatedProducts = [...products, newProduct];
@@ -63,12 +63,25 @@ export default function App() {
     // Save to localStorage
     localStorage.setItem("products", JSON.stringify(updatedProducts));
 
+    // Reset form
     setPname("");
     setPrice("");
     setDiscount("");
-    setImage(null);
+    setImage("");
     
     alert("✅ Product Added Successfully!");
+  };
+
+  // Handle image upload → convert to base64
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImage(reader.result); // e.g., "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAA..."
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // WhatsApp contact function for general inquiries
@@ -157,12 +170,18 @@ Please provide more details.`;
           <div className="products-grid">
             {products.map((p) => (
               <div key={p.id} className="card">
-                {p.image && <img src={p.image} alt={p.name} />}
+                {p.image ? (
+                  <img src={p.image} alt={p.name} />
+                ) : (
+                  <img 
+                    src="https://images.unsplash.com/photo-1586105251261-72a756497a11?w=400" 
+                    alt="Textile placeholder" 
+                  />
+                )}
                 <h3>{p.name}</h3>
                 <p className="price">₹ {p.price}</p>
                 {p.discount && <p className="discount">Discount: {p.discount}%</p>}
                 
-                {/* WhatsApp button for each product */}
                 <button 
                   className="product-whatsapp-btn"
                   onClick={() => inquireProduct(p)}
@@ -268,16 +287,16 @@ Please provide more details.`;
             type="file"
             accept="image/*"
             capture="environment"
-            onChange={(e) => {
-              if (e.target.files[0]) {
-                setImage(URL.createObjectURL(e.target.files[0]));
-              }
-            }}
+            onChange={handleImageUpload}
           />
 
           {image && (
             <div style={{textAlign: 'center', margin: '1rem 0'}}>
-              <img src={image} alt="Preview" style={{maxWidth: '200px', borderRadius: '10px'}} />
+              <img 
+                src={image} 
+                alt="Preview" 
+                style={{maxWidth: '200px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)'}} 
+              />
             </div>
           )}
 
